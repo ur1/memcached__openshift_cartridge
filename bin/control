@@ -76,7 +76,7 @@ stop () {
     if pgrep "memcached" >/dev/null && [ -f "${pid}" ]; then
         kill -QUIT $( cat ${pid} )
         wait_for_stop ${pid} &&
-            _msg "[OK]" ':MSG_NO_TIME:'
+            _msg "[OK] stopped" ':MSG_NO_TIME:'
     else
         _msg "$p not started"
     fi
