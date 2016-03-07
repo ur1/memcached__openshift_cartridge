@@ -104,13 +104,13 @@ set_env_var \
     ${OPENSHIFT_MEMCACHED_DIR}env/
 
 
+_msg "$p end "
+
 _memcached_display_versions
 
 _msg " "   ':MSG_NO_TIME:'
-_msg "$p don't forget restart app - this will _actually_ change version "
-_msg "## Manual input instructions #############################################"
-_msg "rhc app-restart --app $OPENSHIFT_APP_NAME"
-_msg "## Manual input instructions #############################################"
-_msg " "   ':MSG_NO_TIME:'
-
-_msg "$p end "
+_msg "Don't forget restart app - this will _actually_ change version "              ':MSG_NO_TIME:'
+_msg "## Manual input instructions #############################################"   ':MSG_NO_TIME:'
+_msg "rhc app-restart --app $OPENSHIFT_APP_NAME"                                    ':MSG_NO_TIME:'
+_msg "## Manual input instructions #############################################"   ':MSG_NO_TIME:'
+_msg " "   ':MSG_NO_TIME:'   ':MSG_NO_TIME:'
