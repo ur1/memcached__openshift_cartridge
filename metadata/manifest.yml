@@ -1,0 +1,18 @@
+Name: memcached
+Cartridge-Short-Name: memcached
+Display-Name: memcached
+Version: "1.4.25"
+Versions: ["1.4.25"]
+Website: https://github.com/ur1/memcached__openshift_cartridge
+Cartridge-Version: 0.0.1
+Cartridge-Vendor: ur1
+Categories:
+  - embedded
+  - memcached
+Provides:
+  - memcached
+  - memcached(version) = 1.4.25
+Group-Overrides:
+  - components:
+    - memcached
+    - embedded

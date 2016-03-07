@@ -1,0 +1,116 @@
+#!/bin/bash
+# set -e fail script from start
+# don't know why
+
+source ${OPENSHIFT_MEMCACHED_DIR}bin/_common
+
+
+memcached_version=$1
+is_force_reinstall=$2
+
+p="${global_pref}|real_install|"
+_msg "$p begin $memcached_version"
+
+
+version_dir="${OPENSHIFT_MEMCACHED_DIR}versions/${memcached_version}/"
+version_local_dir="${version_dir}usr/local/"
+
+# if version already exists and not forced reinstall just switch version in PATH
+if [ -x "${version_local_dir}bin/memcached" ] && [[ "$is_force_reinstall" != "--force-reinstall" ]]; then
+    _msg "$p "
+    _msg "rhc ssh --app $OPENSHIFT_APP_NAME '\$memcached_real_install 1.4.25 --force-reinstall'"
+    _msg "$p switch to new version and exit"
+
+    _msg "$p set PATH in env"
+
+    set_env_var \
+        OPENSHIFT_MEMCACHED_PATH_ELEMENT \
+        ${OPENSHIFT_MEMCACHED_DIR}versions/${memcached_version}/usr/local/bin/ \
+        ${OPENSHIFT_MEMCACHED_DIR}env/
+
+    _memcached_display_versions
+
+    _msg " "   ':MSG_NO_TIME:'
+    _msg "$p don't forget restart app - this will _actually_ change version "
+    _msg "## Manual input instructions #############################################"   ':MSG_NO_TIME:'
+    _msg "rhc app-restart --app $OPENSHIFT_APP_NAME"                                    ':MSG_NO_TIME:'
+    _msg "## Manual input instructions #############################################"   ':MSG_NO_TIME:'
+    _msg " "   ':MSG_NO_TIME:'
+
+    exit 0
+fi
+
+if [[ "$is_force_reinstall" == "--force-reinstall" ]]; then
+    _msg "$p before 'make install':"
+    [[ "$memcached_version" == "$( _get_memcached_ver_cleaned )" ]] &&
+        _msg "- will stop cartridge"
+
+    _msg "- delete version $memcached_version"
+fi
+
+
+SRC_DIR="${OPENSHIFT_TMP_DIR}memcached-${memcached_version}/"
+rm -rf "$SRC_DIR"
+mkdir -p "$SRC_DIR"
+
+cd "$SRC_DIR"
+
+
+_msg "$p clone from repository"
+git clone https://github.com/memcached/memcached memcached  >>$memcached_log_actions 2>&1
+cd memcached
+_msg "$p checkout from repository"
+git checkout $memcached_version     >>$memcached_log_actions 2>&1
+_msg "$p autogen.sh"
+./autogen.sh                        >>$memcached_log_actions 2>&1
+
+
+# sasl - user-pass connection to memcached
+#./configure --enable-sasl --enable-sasl-pwdb --prefix=$( dirname $CART_BIN_DIR )
+
+
+_msg "$p configure"
+./configure --prefix=${version_local_dir} >>$memcached_log_actions 2>&1
+
+_msg "$p make"
+make >>$memcached_log_actions
+#make test     >>$memcached_log_actions
+
+
+if [[ "$is_force_reinstall" == "--force-reinstall" ]]; then
+    [[ "$memcached_version" == "$( _get_memcached_ver_cleaned )" ]] &&
+        $memcached_control stop
+
+    _msg "$p delete existed version $memcached_version"
+    rm -rf "$version_dir" &&
+        _msg "deleted"
+fi
+
+# bin/ will added by memcached
+mkdir -p "$version_local_dir"
+
+
+_msg "$p make install"
+make install  >>$memcached_log_actions 2>&1
+# make clean    >>$memcached_log_actions 2>&1
+
+rm -rf "$SRC_DIR"
+
+_msg "$p set PATH in env"
+
+set_env_var \
+    OPENSHIFT_MEMCACHED_PATH_ELEMENT \
+    ${OPENSHIFT_MEMCACHED_DIR}versions/${memcached_version}/usr/local/bin/ \
+    ${OPENSHIFT_MEMCACHED_DIR}env/
+
+
+_memcached_display_versions
+
+_msg " "   ':MSG_NO_TIME:'
+_msg "$p don't forget restart app - this will _actually_ change version "
+_msg "## Manual input instructions #############################################"
+_msg "rhc app-restart --app $OPENSHIFT_APP_NAME"
+_msg "## Manual input instructions #############################################"
+_msg " "   ':MSG_NO_TIME:'
+
+_msg "$p end "

@@ -1,0 +1,39 @@
+#!/bin/bash
+# Prepare this instance of cartridge to be operational for the initial install
+#
+# run by openshift like ./install --version 1.2.3
+# 1.2.3 - get from manifest Version variable
+
+source ${OPENSHIFT_MEMCACHED_DIR}bin/_common
+
+# for _msg function in _common file
+# this use for change formatting messages if this scripts run by rhc or openshift
+# 1 = show with prefixes for rhc
+export non_direct_request=1
+
+
+p="${global_pref}|install|"
+_msg "$p begin"
+
+
+# .bash_profile
+$( grep "${global_pref}" ${OPENSHIFT_DATA_DIR}.bash_profile &>/dev/null )
+if (( "$?" > "0" )) ; then
+
+    cat <<EOF >> ${OPENSHIFT_DATA_DIR}.bash_profile
+# ${global_pref} cartridge
+source ${OPENSHIFT_MEMCACHED_DIR}bin/_common
+
+#= ${global_pref} =========================================
+
+EOF
+
+fi
+_msg "$p add to .bash_profile"
+
+
+# install executed by openshift with params --version 1.2.3 from manifest.yml
+$memcached_real_install $2
+
+
+_msg "$p end"

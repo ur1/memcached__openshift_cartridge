@@ -1,0 +1,93 @@
+#!/bin/bash -e
+source $OPENSHIFT_CARTRIDGE_SDK_BASH
+
+# not delete
+# env variable not do thing right!
+global_pref="Memcached"
+
+
+memcached_log_actions=${OSC__MEMCACHED_LOG_PREFIX}actions.log
+
+
+_msg() {
+    local txt
+    local type
+    local Y
+    local R
+
+    Y=$( echo -e '\e[0;33m' )
+    R=$( echo -e '\e[0m' )
+
+    txt="${Y}$1${R}"
+    type=$2
+
+
+
+    if [[ "${non_direct_request}" == '1' ]]; then
+
+        case ${type} in
+            ':RESULT:')         client_result   "$txt";;
+            ':MSG_NO_TIME:')    client_message  "$txt";;
+            ':MSG:')            client_message  "[$( date +'%H:%M:%S_%3N' )]$txt";;
+            *)                  client_message  "[$( date +'%H:%M:%S_%3N' )]$txt";;
+        esac
+
+    else
+        # use in case 'rhc ssh'
+        case ${type} in
+            ':RESULT:')         echo "$txt";;
+            ':MSG_NO_TIME:')    echo "$txt";;
+            ':MSG:')            echo "[$( date +'%H:%M:%S_%3N' )]$txt";;
+            *)                  echo "[$( date +'%H:%M:%S_%3N' )]$txt";;
+        esac
+
+    fi
+
+    echo "[`date +'%Y:%m:%d__%H:%M:%S'`]$txt" >> $memcached_log_actions
+}
+
+
+
+_memcached_version_in_path () {
+    echo $( echo $PATH| grep -oe 'memcached/versions/\([0-9.]*\)' | awk -F'memcached/versions/' '{print $2}' )
+}
+
+
+
+memcached_ping () {
+    echo $( echo stats | socat - UNIX-CONNECT:$OSC__MEMCACHED_SOCK )
+}
+
+
+
+_get_memcached_ver_cleaned (){
+    local _ver_raw
+    local _ver
+
+    if hash memcached 2>/dev/null; then
+        _ver_raw=$( memcached -h | grep "memcached [0-9]\{1,3\}\.[0-9]\{1,3\}\.[0-9]\{1,3\}$" - )
+        _ver=${_ver_raw#memcached }
+        echo "$_ver"
+    else
+        echo "~0"
+    fi
+}
+
+
+
+_memcached_display_versions () {
+    _msg " "            ':MSG_NO_TIME:'
+    _msg "## Software versions ##############################"      ':MSG_NO_TIME:'
+    _msg "memcached -v=$( _get_memcached_ver_cleaned )"             ':MSG_NO_TIME:'
+    _msg "version in PATH =$( _memcached_version_in_path )"         ':MSG_NO_TIME:'
+    _msg "versions list >| $( ls -1 ${OPENSHIFT_MEMCACHED_DIR}versions | tr '\n' ' ' )|<"   ':MSG_NO_TIME:'
+    _msg "## Software versions ##############################"      ':MSG_NO_TIME:'
+    _msg " "            ':MSG_NO_TIME:'
+}
+
+# when hit in bash/ssh '${cart_name}_display_versions'
+# this will touch env variable in env/{cart_name}_display_versions.erb
+# which run ./_common {cart_name}_display_versions
+#
+# that's because ssh hardcoded to non interactive mode and I can't use aliases for that
+[[ "$1" == 'memcached_display_versions' ]] && _memcached_display_versions
