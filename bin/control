@@ -24,7 +24,8 @@ start () {
     _memcached_display_versions
 
     if ! hash memcached 2>/dev/null ; then
-
+        _msg "${global_pref} cart not started properly"
+        _msg "Check logs"
         _msg " "          ':MSG_NO_TIME:'
         _msg "## Manual input instructions #############################################"           ':MSG_NO_TIME:'
         _msg "rhc ssh --app $OPENSHIFT_APP_NAME '\$memcached_real_install'"                         ':MSG_NO_TIME:'
@@ -35,7 +36,7 @@ start () {
 
         _msg "$p end"
 
-        exit 0;
+        exit 1
     fi
 
     local pid
