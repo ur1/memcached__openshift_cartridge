@@ -82,6 +82,9 @@ stop () {
         _msg "$p not started"
     fi
 
+    rm -rf ${OSC__MEMCACHED_SOCK} &&
+        _msg "$p clean sock-file"
+
     rm -rf ${pid} &&
         _msg "$p clean pid-file"
 
