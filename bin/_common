@@ -6,7 +6,9 @@ source $OPENSHIFT_CARTRIDGE_SDK_BASH
 global_pref="Memcached"
 
 
-memcached_log_actions=${OSC__MEMCACHED_LOG_PREFIX}actions.log
+# put all cart logs to one file
+# memcached_log_actions=${OSC__MEMCACHED_LOG_PREFIX}actions.log
+memcached_log_actions=${OPENSHIFT_LOG_DIR}cart__actions.log
 
 
 _msg() {
