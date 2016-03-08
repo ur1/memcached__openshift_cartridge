@@ -24,7 +24,8 @@ start () {
     _memcached_display_versions
 
     if ! hash memcached 2>/dev/null ; then
-        _msg "${global_pref} cart not started properly"
+        _msg "${global_pref} cart can not started properly"
+        _msg "Problem occurred during installation"
         _msg "Check logs"
         _msg " "          ':MSG_NO_TIME:'
         _msg "## Manual input instructions #############################################"           ':MSG_NO_TIME:'

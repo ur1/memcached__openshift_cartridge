@@ -36,4 +36,7 @@ _msg "$p add to .bash_profile"
 $memcached_real_install $2
 
 
+find $OPENSHIFT_MEMCACHED_DIR -iname '.gitkeep' -delete
+
+
 _msg "$p end"
